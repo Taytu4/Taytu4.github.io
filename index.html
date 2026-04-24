@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Révisions CS Barman - Cocktails</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
+        h1 { text-align: center; color: #2c3e50; font-size: 24px; }
+        h2 { text-align: center; color: #d35400; margin-bottom: 5px; }
+        .glass-icon-header { text-align: center; font-size: 50px; margin-bottom: 20px; }
+        button { background-color: #2c3e50; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+        button:hover { background-color: #1a252f; }
+        .quiz-section { display: none; }
+        .field { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #34495e; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .ingredient-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .ingredient-row > * { flex: 1; padding: 10px; border-radius: 6px; }
+        .fixed-text { background-color: #ecf0f1; border: 1px solid #bdc3c7; display: flex; align-items: center; }
+        .correction { color: #27ae60; font-size: 14px; font-weight: bold; margin-top: 5px; display: none; }
+        #btn-verifier { background-color: #27ae60; margin-top: 10px; }
+        #btn-verifier:hover { background-color: #219653; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍸 Révisions CS Barman</h1>
+    <button onclick="tirerAuSort()">Tirer un cocktail au sort</button>
+
+    <div id="quiz-area" class="quiz-section">
+        <h2 id="cocktail-nom">Nom du Cocktail</h2>
+        <div id="cocktail-glass-icon" class="glass-icon-header"></div>
+        
+        <div id="fields-container"></div>
+        <div id="ingredients-container">
+            <label>Ingrédients :</label>
+            <div id="ingredients-list"></div>
+        </div>
+
+        <button id="btn-verifier" onclick="verifierReponses()">Vérifier mes réponses</button>
+    </div>
+</div>
+
+<script>
+    // Fonction 100% hors-ligne pour associer le nom du verre à une icône visuelle
+    function getGlassIcon(verre) {
+        const v = verre.toLowerCase();
+        if (v.includes('rocks')) return '🥃';
+        if (v.includes('coupe') || v.includes('martini') || v.includes('nick & nora')) return '🍸';
+        if (v.includes('flûte')) return '🥂';
+        if (v.includes('vin')) return '🍷';
+        if (v.includes('timbale')) return '🛢️'; // Symbole pour la timbale
+        if (v.includes('highball')) return '🍹';
+        return '🍸'; // Par défaut
+    }
+
+    const cocktails = [
+        // SHORT DRINKS (18)
+        {nom: "Aviation", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Nick & Nora", garnish: "Cerise à l'eau-de-vie", ingredients: [{q: "10 ml", i: "Jus de citron"}, {q: "15 ml", i: "Maraschino"}, {q: "5 ml", i: "Crème de violette"}, {q: "40 ml", i: "Gin"}]},
+        {nom: "Bamboo", categorie: "Short Drink", moment: "Before Dinner", technique: "Au verre à mélange", verre: "Nick & Nora", garnish: "Zeste de citron exprimé", ingredients: [{q: "35 ml", i: "Sherry Fino"}, {q: "35 ml", i: "Vermouth Dry"}, {q: "2 traits", i: "Bitters orange"}]},
+        {nom: "Bramble", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Rocks", garnish: "Demi-tranche de citron et deux mûres", ingredients: [{q: "5 ml", i: "Sirop de sucre"}, {q: "15 ml", i: "Jus de citron"}, {q: "40 ml", i: "Gin"}, {q: "10 ml", i: "Crème de mûre"}]},
+        {nom: "Caipirinha", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Direct au verre (au pilon)", verre: "Rocks", garnish: "Aucune", ingredients: [{q: "1/2", i: "Citron vert en morceaux"}, {q: "1 bar spoon", i: "Sucre poudre"}, {q: "40 ml", i: "Cachaça"}]},
+        {nom: "Cosmopolitan", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Coupe", garnish: "Zeste de citron vert exprimé", ingredients: [{q: "5 ml", i: "Jus de citron vert"}, {q: "20 ml", i: "Nectar de cranberry"}, {q: "15 ml", i: "Triple sec"}, {q: "30 ml", i: "Vodka"}]},
+        {nom: "Daiquiri", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Coupe", garnish: "Aucune", ingredients: [{q: "1 bar spoon", i: "Sucre poudre"}, {q: "20 ml", i: "Jus de citron vert"}, {q: "40 ml", i: "Ron cubain 3 años"}]},
+        {nom: "Dry Martini", categorie: "Short Drink", moment: "Before Dinner", technique: "Au verre à mélange", verre: "Martini", garnish: "Olive verte ou zeste de citron exprimé", ingredients: [{q: "15 ml", i: "Vermouth dry"}, {q: "55 ml", i: "Gin"}]},
+        {nom: "Espresso Martini", categorie: "Short Drink", moment: "After Dinner", technique: "Au shaker", verre: "Coupe", garnish: "Trois grains de café", ingredients: [{q: "5 ml", i: "Sirop de sucre"}, {q: "25 ml", i: "Café espresso"}, {q: "10 ml", i: "Liqueur de café"}, {q: "30 ml", i: "Vodka"}]},
+        {nom: "Gin Basil Smash", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Rocks", garnish: "Tête de basilic frais", ingredients: [{q: "15 ml", i: "Sirop de sucre"}, {q: "20 ml", i: "Jus de citron"}, {q: "50 ml", i: "Gin"}, {q: "10", i: "Feuilles de basilic"}]},
+        {nom: "Manhattan", categorie: "Short Drink", moment: "Before Dinner", technique: "Au verre à mélange", verre: "Nick & Nora", garnish: "Cerise à l'eau-de-vie", ingredients: [{q: "2 traits", i: "Aromatic bitters"}, {q: "20 ml", i: "Vermouth rouge"}, {q: "50 ml", i: "Whiskey américain"}]},
+        {nom: "Margarita", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Coupe (givrée au sel)", garnish: "Sel", ingredients: [{q: "10 ml", i: "Jus de citron vert"}, {q: "20 ml", i: "Triple sec"}, {q: "40 ml", i: "Tequila"}]},
+        {nom: "Mint Julep", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Direct au verre (au pilon)", verre: "Timbale Julep", garnish: "Tête de menthe fraîche", ingredients: [{q: "10", i: "Feuilles de menthe"}, {q: "2 bar spoon", i: "Sucre poudre"}, {q: "50 ml", i: "Eau-de-vie brune"}]},
+        {nom: "Negroni", categorie: "Short Drink", moment: "Before Dinner", technique: "Direct au verre", verre: "Rocks", garnish: "Demie-tranche d'orange", ingredients: [{q: "30 ml", i: "Vermouth rouge"}, {q: "30 ml", i: "Bitter"}, {q: "30 ml", i: "Gin"}]},
+        {nom: "Old-Fashioned", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Rocks", garnish: "Zeste d'orange exprimé et cerise à l'eau-de-vie", ingredients: [{q: "1 morceau", i: "Sucre brun"}, {q: "2 traits", i: "Aromatic bitters"}, {q: "50 ml", i: "Eau-de-vie brune"}]},
+        {nom: "Penicillin", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Rocks", garnish: "Lamelle de gingembre", ingredients: [{q: "20 ml", i: "Jus de citron"}, {q: "10 ml", i: "Sirop de miel"}, {q: "10 ml", i: "Jus de gingembre frais"}, {q: "40 ml", i: "Blend whisky"}, {q: "10 ml", i: "Whisky tourbé"}]},
+        {nom: "Pornstar Martini", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Coupe", garnish: "Demi-fruit de la passion (+ Shot de Champagne)", ingredients: [{q: "10 ml", i: "Sirop de vanille"}, {q: "30 ml", i: "Purée fruit de la passion"}, {q: "20 ml", i: "Liqueur fruit de la passion"}, {q: "30 ml", i: "Vodka vanille"}]},
+        {nom: "Sidecar", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Coupe", garnish: "Aucune", ingredients: [{q: "10 ml", i: "Jus de citron"}, {q: "20 ml", i: "Triple sec"}, {q: "40 ml", i: "Cognac"}]},
+        {nom: "Sour", categorie: "Short Drink", moment: "All Day Cocktail", technique: "Au shaker (Dry Shake)", verre: "Rocks", garnish: "Cerise à l'eau-de-vie", ingredients: [{q: "1 bar spoon", i: "Sucre poudre"}, {q: "20 ml", i: "Jus de citron"}, {q: "20 ml", i: "Blanc d'oeuf ou Aquafaba"}, {q: "50 ml", i: "Spiritueux"}]},
+        
+        // LONG DRINKS (18)
+        {nom: "Americano", categorie: "Long Drink", moment: "Before Dinner", technique: "Direct au verre", verre: "Highball", garnish: "Demi-tranche d'orange et demi-tranche de citron", ingredients: [{q: "20 ml", i: "Vermouth rouge"}, {q: "50 ml", i: "Bitter"}, {q: "50 ml", i: "Eau gazeuse"}]},
+        {nom: "Bellini", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Flûte", garnish: "Aucune", ingredients: [{q: "40 ml", i: "Nectar/Purée de pêche blanche"}, {q: "80 ml", i: "Champagne"}]},
+        {nom: "Bloody Mary", categorie: "Long Drink", moment: "Before Dinner", technique: "Direct au verre", verre: "Highball", garnish: "Demi-tranche de citron et branche de céleri", ingredients: [{q: "Pincée", i: "Sel au céleri"}, {q: "2 gouttes", i: "Tabasco"}, {q: "1 trait", i: "Sauce anglaise"}, {q: "10 ml", i: "Jus de citron"}, {q: "40 ml", i: "Vodka"}, {q: "70 ml", i: "Jus de tomate"}]},
+        {nom: "Champagne Cocktail", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Flûte", garnish: "Zeste de citron exprimé", ingredients: [{q: "1 morceau", i: "Sucre blanc"}, {q: "1 trait", i: "Aromatic bitters"}, {q: "10 ml", i: "Cognac"}, {q: "110 ml", i: "Champagne"}]},
+        {nom: "Dark and Stormy", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Highball", garnish: "Quartier de citron vert", ingredients: [{q: "15 ml", i: "Jus de citron vert"}, {q: "100 ml", i: "Ginger beer"}, {q: "40 ml", i: "Black rum"}]},
+        {nom: "Fizz", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Highball", garnish: "Tranche de citron", ingredients: [{q: "10 ml", i: "Sirop de sucre"}, {q: "20 ml", i: "Jus de citron"}, {q: "40 ml", i: "Eau-de-vie"}, {q: "50 ml", i: "Eau gazeuse"}]},
+        {nom: "French 75", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Flûte", garnish: "Zeste de citron exprimé", ingredients: [{q: "10 ml", i: "Sirop de sucre"}, {q: "20 ml", i: "Jus de citron"}, {q: "40 ml", i: "Gin"}, {q: "50 ml", i: "Champagne"}]},
+        {nom: "Horse's Neck", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Highball", garnish: "Long zeste de citron exprimé", ingredients: [{q: "3 traits", i: "Aromatic bitters"}, {q: "40 ml", i: "Cognac"}, {q: "100 ml", i: "Ginger ale"}]},
+        {nom: "Mai Tai", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Rocks", garnish: "Demi-tranche de citron vert et tête de menthe", ingredients: [{q: "25 ml", i: "Jus de citron vert"}, {q: "15 ml", i: "Sirop d'orgeat"}, {q: "15 ml", i: "Curaçao orange"}, {q: "25 ml", i: "Rhum vieux agricole"}, {q: "25 ml", i: "Rhum vieux jamaïcain"}]},
+        {nom: "Mojito", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Highball", garnish: "Tranche de citron vert et tête de menthe", ingredients: [{q: "10", i: "Feuilles de menthe"}, {q: "1 bar spoon", i: "Sucre poudre"}, {q: "20 ml", i: "Jus de citron vert"}, {q: "50 ml", i: "Ron cubain"}, {q: "50 ml", i: "Eau gazeuse"}]},
+        {nom: "Moscow Mule", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Timbale Mule", garnish: "Tranche de citron vert", ingredients: [{q: "15 ml", i: "Jus de citron vert"}, {q: "40 ml", i: "Vodka"}, {q: "100 ml", i: "Ginger beer"}]},
+        {nom: "Paloma", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Highball (givré au sel)", garnish: "Demi-tranche de pamplemousse", ingredients: [{q: "50 ml", i: "Jus de pamplemousse"}, {q: "10 ml", i: "Sirop d'agave"}, {q: "10 ml", i: "Jus de citron vert"}, {q: "40 ml", i: "Tequila blanco 100% agave"}, {q: "50 ml", i: "Eau gazeuse"}]},
+        {nom: "Piña Colada", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Highball", garnish: "Quartier d'ananas et cerise à l'eau-de-vie", ingredients: [{q: "20 ml", i: "Crème de noix de coco"}, {q: "60 ml", i: "Jus d'ananas"}, {q: "40 ml", i: "Rhum blanc"}]},
+        {nom: "Planter's Punch", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Highball", garnish: "Quartier d'ananas et cerise à l'eau-de-vie", ingredients: [{q: "2 traits", i: "Aromatic bitters"}, {q: "40 ml", i: "Jus d'orange"}, {q: "40 ml", i: "Jus d'ananas"}, {q: "40 ml", i: "Rhum agricole blanc"}, {q: "1 trait", i: "Rhum agricole ambré"}]},
+        {nom: "Rum Swizzle", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre (Swizzle)", verre: "Highball", garnish: "Zeste d'orange exprimé et tête de menthe", ingredients: [{q: "20 ml", i: "Sirop de sucre"}, {q: "30 ml", i: "Jus de citron vert"}, {q: "20 ml", i: "Velvet Falernum"}, {q: "50 ml", i: "Rum ambré"}, {q: "2 traits", i: "Aromatic bitters"}]},
+        {nom: "Sex on the Beach", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Au shaker", verre: "Highball", garnish: "Demi-tranche d'orange", ingredients: [{q: "40 ml", i: "Jus d'orange"}, {q: "40 ml", i: "Nectar de cranberry"}, {q: "10 ml", i: "Liqueur de pêche"}, {q: "40 ml", i: "Vodka"}]},
+        {nom: "Spritz", categorie: "Long Drink", moment: "Before Dinner", technique: "Direct au verre", verre: "Verre à vin", garnish: "Adaptée au spiritueux", ingredients: [{q: "50 ml", i: "Bitter ou autres spiritueux"}, {q: "60 ml", i: "Vin blanc effervescent"}, {q: "20 ml", i: "Eau gazeuse"}]},
+        {nom: "Tequila Sunrise", categorie: "Long Drink", moment: "All Day Cocktail", technique: "Direct au verre", verre: "Highball", garnish: "Demi-tranche d'orange et cerise à l'eau-de-vie", ingredients: [{q: "80 ml", i: "Jus d'orange"}, {q: "40 ml", i: "Tequila"}, {q: "1 trait", i: "Sirop grenadine"}]}
+    ];
+
+    let currentCocktail = null;
+
+    function tirerAuSort() {
+        const quizArea = document.getElementById('quiz-area');
+        const fieldsContainer = document.getElementById('fields-container');
+        const ingredientsList = document.getElementById('ingredients-list');
+        const glassIconHeader = document.getElementById('cocktail-glass-icon');
+        
+        // Cache la correction si elle était affichée lors du précédent tirage
+        document.querySelectorAll('.correction').forEach(el => el.style.display = 'none');
+        
+        quizArea.style.display = 'block';
+        fieldsContainer.innerHTML = '';
+        ingredientsList.innerHTML = '';
+
+        currentCocktail = cocktails[Math.floor(Math.random() * cocktails.length)];
+        document.getElementById('cocktail-nom').innerText = currentCocktail.nom;
+        
+        // Affiche l'icône du verre
+        glassIconHeader.innerText = getGlassIcon(currentCocktail.verre);
+
+        const mainFields = [
+            { key: 'categorie', label: 'Catégorie' },
+            { key: 'moment', label: 'Moment' },
+            { key: 'technique', label: 'Technique' },
+            { key: 'verre', label: 'Verrerie' },
+            { key: 'garnish', label: 'Garniture' }
+        ];
+
+        mainFields.forEach(field => {
+            const isHidden = Math.random() > 0.4; // 60% de chance d'être un trou à remplir
+            const div = document.createElement('div');
+            div.className = 'field';
+            
+            if (isHidden) {
+                div.innerHTML = `
+                    <label>${field.label} :</label>
+                    <input type="text" placeholder="À compléter...">
+                    <div class="correction">Correction : ${currentCocktail[field.key]}</div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <label>${field.label} :</label>
+                    <div class="fixed-text">${currentCocktail[field.key]}</div>
+                `;
+            }
+            fieldsContainer.appendChild(div);
+        });
+
+        currentCocktail.ingredients.forEach(ing => {
+            const hideQuantity = Math.random() > 0.5;
+            const div = document.createElement('div');
+            div.className = 'ingredient-row';
+            
+            if (hideQuantity) {
+                div.innerHTML = `
+                    <div style="flex:1; display:flex; flex-direction:column;">
+                        <input type="text" placeholder="Quantité?">
+                        <span class="correction">${ing.q}</span>
+                    </div>
+                    <div class="fixed-text">${ing.i}</div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="fixed-text">${ing.q}</div>
+                    <div style="flex:1; display:flex; flex-direction:column;">
+                        <input type="text" placeholder="Ingrédient?">
+                        <span class="correction">${ing.i}</span>
+                    </div>
+                `;
+            }
+            ingredientsList.appendChild(div);
+        });
+    }
+
+    function verifierReponses() {
+        document.querySelectorAll('.correction').forEach(el => el.style.display = 'block');
+    }
+</script>
+
+</body>
+</html>
